@@ -11,7 +11,7 @@ The library doesn't explicitly handle commands (it's all passed as strings),
 and it doesn't implement any events. Instead it is built on a blocking function call,
 which returns an event or an error. This way you can add on any event system you really want (I have previously used [emission](https://github.com/chuckpreslar/emission) since it's close to the patterns I'm used to), or just chuck it into a loop.
 
-
+The current version is heavily influenced by [irc-event](https://github.com/thoj/go-ircevent) and it's forks. I will be refactoring and rewriting a lot of it since I'm not entirely convinced with the approach, but it's what I needed to make it work for now.
 
 
 ## Installation
