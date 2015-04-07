@@ -12,16 +12,6 @@ const (
 	actionEnd   = ''        // Indicates the end of the same ^
 )
 
-// Since some (rare) operations may trim characters from the string,
-// we can move the indexes by an offset.
-func fixEmoteIndexes(emotes []*Emote, offset int) []*Emote {
-	for _, emote := range emotes {
-		emote.From = emote.From - offset
-		emote.To = emote.To - offset
-	}
-	return emotes
-}
-
 func cleanEvent(event *Event) *Event {
 	// Add "broadcaster" UserType, makes sure that
 	if to := event.Channel(); len(to) > 0 && event.From == to[1:] {
@@ -36,7 +26,6 @@ func cleanEvent(event *Event) *Event {
 			if (msg[0:startLen] == actionStart) && (msg[len(msg)-1] == actionEnd) {
 				event.Params[1] = event.Params[1][startLen : len(event.Params[1])-1]
 				event.Action = true
-				event.Tags.Emotes = fixEmoteIndexes(event.Tags.Emotes, startLen)
 			}
 		}
 	}
