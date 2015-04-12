@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	actionStart = "ACTION " // Indicates the start of an ACTION(/me) message
-	actionEnd   = ''        // Indicates the end of the same ^
+	actionStart = "\x01ACTION " // Indicates the start of an ACTION(/me) message
+	actionEnd   = '\x01'        // Indicates the end of the same ^
 )
 
 func cleanEvent(event *Event) *Event {

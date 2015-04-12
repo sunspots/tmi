@@ -25,7 +25,7 @@ func (tmi *Connection) Send(s string) {
 	if !tmi.Stopped() {
 		tmi.send <- s
 	} else {
-		log.Printf("unable to send %s on closed connection \n", s)
+		dbg.Printf("unable to send %s on closed connection \n", s)
 	}
 }
 func (tmi *Connection) Sendf(format string, a ...interface{}) {
@@ -44,7 +44,6 @@ func (tmi *Connection) ReadEvent() (*Event, error) {
 
 func (tmi *Connection) Disconnect() {
 	if !tmi.Stopped() {
-		dbg.Println("Disconnecting...")
 		tmi.SetStopped(true)
 		close(tmi.end)
 		tmi.Wait()
@@ -102,7 +101,7 @@ func (tmi *Connection) readLoop() {
 			tmi.lastMessage = time.Now()
 
 			if tmi.Debug {
-				dbg.Print("<", msg)
+				dbg.Print("< ", msg)
 			}
 
 			event := parseEvent(msg)
@@ -181,7 +180,8 @@ func (tmi *Connection) controlLoop() {
 	for !tmi.Stopped() {
 		err := <-tmi.Error
 		if tmi.Stopped() {
-			break
+			log.Println("TMI Error thrown while stopped, should not happen!")
+			continue
 		}
 		log.Printf("Error, disconnecting: %s\n", err)
 		tmi.Done()
