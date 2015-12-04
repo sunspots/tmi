@@ -1,4 +1,4 @@
-package bttv_emotes
+package bttvemotes
 
 import (
 	"encoding/json"
@@ -21,19 +21,17 @@ type BTTVEmote struct {
 	Regex     *regexp.Regexp
 	ImageType string `json:"imageType"`
 }
+
 // BTTVEmoteSet is used to unmarshal sets from the BTTV API
 type BTTVEmoteSet struct {
 	Status      int          `json:"status"`
 	Emotes      []*BTTVEmote `json:"emotes"`
 	URLTemplate string       `json:"urlTemplate"`
 }
+
 // BTTVEmotes is also used for unmarshalling sets from the BTTV API
 type BTTVEmotes struct {
 	Sets map[string]*BTTVEmoteSet
-}
-// Init sets up the BTTV data and downloads emotes
-func (bttv *BTTVEmotes) Init() {
-	bttv.DownloadEmotes()
 }
 
 func (bttv *BTTVEmotes) Download(url string, setName string) {
@@ -131,7 +129,6 @@ func (bttv *BTTVEmotes) MatchEmotes(m *tmi.Message) []*tmi.Emote {
 	return foundEmotes
 }
 
-
 // TBD
 func (bttv *BTTVEmotes) MiddleWare(m *tmi.Message, err error) (*tmi.Message, error) {
 	if err != nil {
@@ -140,6 +137,6 @@ func (bttv *BTTVEmotes) MiddleWare(m *tmi.Message, err error) (*tmi.Message, err
 	return m, nil
 }
 
-func New() *BTTVEmotes{
+func New() *BTTVEmotes {
 	return &BTTVEmotes{Sets: map[string]*BTTVEmoteSet{}}
 }
