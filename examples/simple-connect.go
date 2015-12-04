@@ -3,23 +3,28 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/sunspotseu/tmi"
 	"log"
 	"os"
+
+	"github.com/SunspotsEU/tmi"
 )
 
-var exampleChannel = "#sunspots"
+const (
+	User    = "sunspots"
+	OAuth   = "oauth:9m48oiumz0bz3v8ec4g6ph8ylw4roe"
+	Channel = "#sunspots"
+)
 
 func readLoop(connection *tmi.Connection) {
 	for {
-		evt, err := connection.ReadEvent()
+		evt, err := connection.ReadMessage()
 		if err != nil {
 			// You could use this to do something useful and
-			// handle reconnects, but we're just gonna error for the sake of simplicity.
+			// handle reconnects, but we're just gonna error out for the sake of simplicity.
 			log.Fatal(err)
 		} else {
 			if evt.Command == "PRIVMSG" {
-				log.Printf("%s says %s to %s: %s\n", evt.From, evt.Command, evt.Channel(), evt.Message())
+				log.Printf("%s says %s to %s: %s\n", evt.From, evt.Command, evt.Channel(), evt.Trailing)
 			} else {
 				log.Println("Unhandled event", evt)
 			}
@@ -31,9 +36,9 @@ func main() {
 	connection := tmi.New() // Initialise the connection object with required login
 	connection.Debug = true // Prints out raw incoming and outgoing messages
 
-	connection.Connect("sunspots", "oauth:9m48oiumz0bz3v8ec4g6ph8ylw4roe") // Connect and authenticate
+	connection.Connect(User, OAuth) // Connect and authenticate
 
-	connection.Join(exampleChannel)
+	connection.Join(Channel)
 	go readLoop(connection)
 
 	// Now, since it's running things in a goroutine, we don't want main to exit yet,
@@ -43,7 +48,7 @@ func main() {
 
 	for {
 		input, _ := reader.ReadString('\n')
-		connection.Send(fmt.Sprintf("PRIVMSG %s %s", exampleChannel, input))
+		connection.Send(fmt.Sprintf("PRIVMSG %s %s", Channel, input))
 	}
 
 }

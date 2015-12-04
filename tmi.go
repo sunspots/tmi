@@ -18,6 +18,10 @@ var (
 const (
 	// Maximum message size allowed from peer.
 	maxMessageSize = 512
+	// LF character, line feed is the read message delimiter
+	LF byte = '\n'
+	// CR character, messages are terminated with CR+LF
+	CR byte = '\r'
 )
 
 // Send sends messages to the TMI server
@@ -28,46 +32,54 @@ func (tmi *Connection) Send(s string) {
 		dbg.Printf("unable to send %s on closed connection \n", s)
 	}
 }
+
+// Sendf sends a message, with format and params, wrapper around fmt.Sprintf
 func (tmi *Connection) Sendf(format string, a ...interface{}) {
 	tmi.Send(fmt.Sprintf(format, a...))
 }
-func (tmi *Connection) ReadEvent() (*Event, error) {
-	evt, ok := <-tmi.EventChan
+
+// ReadMessage reads an incoming message from the server, blocking until a message is recieved
+func (tmi *Connection) ReadMessage() (*Message, error) {
+	evt, ok := <-tmi.MessageChan
 	var err error
 	if !ok {
-		err = errors.New("read event channel closed")
+		err = errors.New("read message channel closed")
 	} else {
 		err = nil
 	}
 	return evt, err
 }
 
+// Disconnect from the server
 func (tmi *Connection) Disconnect() {
 	if !tmi.Stopped() {
-		tmi.SetStopped(true)
+		tmi.setStopped(true)
 		close(tmi.end)
 		tmi.Wait()
 		close(tmi.send)
 		tmi.socket.Close()
 		tmi.socket = nil
-		close(tmi.EventChan)
+		close(tmi.MessageChan)
 		dbg.Println("Disconnected!")
 		//tmi.Error <- errors.New("Disconnect Called")
 	}
 }
 
+// Reconnect to a connected server
 func (tmi *Connection) Reconnect() error {
 	tmi.Disconnect()
 	return tmi.Connect(tmi.Nick, tmi.Token)
 }
 
+// Stopped tells us wether the client is stopped or not
 func (tmi *Connection) Stopped() bool {
 	tmi.Lock()
 	defer tmi.Unlock()
 	return tmi.stopped
 }
 
-func (tmi *Connection) SetStopped(value bool) {
+// Update the stopped status when starting or stopping the client
+func (tmi *Connection) setStopped(value bool) {
 	tmi.Lock()
 	tmi.stopped = value
 	tmi.Unlock()
@@ -76,7 +88,7 @@ func (tmi *Connection) SetStopped(value bool) {
 // The main loop to read messages from the server, runs as a goroutine.
 func (tmi *Connection) readLoop() {
 	defer func() {
-		log.Println("readloop done")
+		log.Println("Reader closed")
 		tmi.Done()
 	}()
 	br := bufio.NewReaderSize(tmi.socket, maxMessageSize)
@@ -89,7 +101,7 @@ func (tmi *Connection) readLoop() {
 			if tmi.socket != nil {
 				tmi.socket.SetReadDeadline(time.Now().Add(tmi.Timeout*2 + tmi.KeepAlive))
 			}
-			msg, err := br.ReadString('\n')
+			msg, err := br.ReadString(LF)
 			if err != nil {
 				tmi.Error <- err
 				return
@@ -104,19 +116,19 @@ func (tmi *Connection) readLoop() {
 				dbg.Print("< ", msg)
 			}
 
-			event := parseEvent(msg)
-			if event.Command == "PING" {
-				tmi.Send("PONG " + event.Message())
+			message := ParseMessage(msg)
+			if message.Command == "PING" {
+				tmi.Send("PONG " + message.Trailing)
 				continue
 			}
-			tmi.EventChan <- event
+			tmi.MessageChan <- message
 		}
 	}
 }
 
 func (tmi *Connection) writeLoop() {
 	defer func() {
-		log.Println("writeloop done")
+		log.Println("Writer closed")
 		tmi.Done()
 	}()
 	for {
@@ -153,7 +165,7 @@ func (tmi *Connection) writeLoop() {
 
 func (tmi *Connection) pingLoop() {
 	defer func() {
-		log.Println("pingloop done")
+		log.Println("Pinger stopped")
 		tmi.Done()
 	}()
 	ticker := time.NewTicker(tmi.Timeout) // Tick for monitoring
@@ -161,6 +173,7 @@ func (tmi *Connection) pingLoop() {
 		select {
 		case _, ok := <-ticker.C:
 			if !ok {
+				// The ticker has been closed, probably shouldn't happen before tmi.end is closed
 				log.Println("ticker not ok")
 				return
 			}
@@ -180,7 +193,8 @@ func (tmi *Connection) controlLoop() {
 	for !tmi.Stopped() {
 		err := <-tmi.Error
 		if tmi.Stopped() {
-			log.Println("TMI Error thrown while stopped, should not happen!")
+			// If one of the goroutines errors when we've already stopped,
+			// There's no need to handle the error.
 			continue
 		}
 		log.Printf("Error, disconnecting: %s\n", err)
@@ -220,9 +234,9 @@ func (tmi *Connection) Connect(nick, token string) (err error) {
 	tmi.Lock()
 	tmi.end = make(chan bool)
 	tmi.send = make(chan string, 10)
-	tmi.EventChan = make(chan *Event, 50)
+	tmi.MessageChan = make(chan *Message, 50)
+	tmi.stopped = false
 	tmi.Unlock()
-	tmi.SetStopped(false)
 	tmi.Add(4)
 	go tmi.readLoop()
 	go tmi.writeLoop()
@@ -236,7 +250,6 @@ func (tmi *Connection) Connect(nick, token string) (err error) {
 	if len(tmi.TC) > 1 {
 		tmi.Send(tmi.TC)
 	}
-	//Answer pings
 
 	return nil
 }
