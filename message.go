@@ -59,13 +59,13 @@ func ParseMessage(raw string) *Message {
 		return nil
 	}
 	m := new(Message)
-	
+
 	// Next delimiter, before the next part we want to parse (i)
 	// nextDelimiter is always relative to the current position, so actual index
 	// is position + nextDelimiter
-	nextDelimiter := 0 
+	nextDelimiter := 0
 	// working position/cursor (c)
-	position := 0 
+	position := 0
 
 	//Extract tags
 	if raw[0] == prefixTags {
@@ -143,6 +143,7 @@ func cleanMessage(m *Message) *Message {
 	return m
 }
 
+// ParseEmotes is a short way to automatically parse and save the message's emotes, using tmi.ParseEmotes
 func (m *Message) ParseEmotes() {
 	if m == nil {
 		return
@@ -156,6 +157,10 @@ func (m *Message) ParseEmotes() {
 		sort.Sort(ByPos(m.Emotes))
 	}
 }
+
+// Bytes is used to return a Message to a []byte, in case we want to send a *Message to the server
+// This does not return a parsed Message to its original form, but rather a message
+// in the basic form that the server expects
 func (m *Message) Bytes() []byte {
 	var buf bytes.Buffer
 
@@ -172,6 +177,7 @@ func (m *Message) Bytes() []byte {
 	return buf.Bytes()
 }
 
+// String returns a stringified version of the message, see Message.Bytes
 func (m *Message) String() string {
 	return string(m.Bytes())
 }
