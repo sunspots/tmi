@@ -24,17 +24,6 @@ const (
 	maxLength = 510 // Maximum length is 512 - 2 for the line endings.
 )
 
-// Message struct contains all the relevant data for a message
-type Message struct {
-	From     string            `json:"from"`
-	Command  string            `json:"command"`
-	Params   []string          `json:"params"`
-	Trailing string            `json:"trailing"`
-	Tags     map[string]string `json:"tags"`
-	Emotes   []*Emote          `json:"emotes"`
-	Action   bool              `json:"action, omitempty"`
-}
-
 // Emote struct for storing one emote, with a single from/to position.
 // Storing each emote occurance in one object allows us to properly sort the emotes
 // to ease the
@@ -51,6 +40,66 @@ type ByPos []*Emote
 func (a ByPos) Len() int           { return len(a) }
 func (a ByPos) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByPos) Less(i, j int) bool { return a[i].From < a[j].From }
+
+// Message struct contains all the relevant data for a message
+type Message struct {
+	From     string            `json:"from"`
+	Command  string            `json:"command"`
+	Params   []string          `json:"params"`
+	Trailing string            `json:"trailing"`
+	Tags     map[string]string `json:"tags"`
+	Emotes   []*Emote          `json:"emotes"`
+	Action   bool              `json:"action, omitempty"`
+}
+
+// ParseEmotes is a short way to automatically parse and save the message's emotes, using tmi.ParseEmotes
+func (m *Message) ParseEmotes() {
+	if m == nil {
+		return
+	}
+	if m.Tags != nil {
+		s, ok := m.Tags["emotes"]
+		if !ok {
+			return
+		}
+		m.Emotes = ParseEmotes(s)
+		sort.Sort(ByPos(m.Emotes))
+	}
+}
+
+// Bytes is used to return a Message to a []byte, in case we want to send a *Message to the server
+// This does not return a parsed Message to its original form, but rather a message
+// in the basic form that the server expects
+func (m *Message) Bytes() []byte {
+	var buf bytes.Buffer
+
+	buf.WriteString(m.Command)
+
+	if len(m.Params) > 0 {
+		buf.WriteByte(space)
+		buf.WriteString(strings.Join(m.Params, string(space)))
+		buf.WriteString(m.Trailing)
+	}
+	if buf.Len() > (maxLength) {
+		buf.Truncate(maxLength)
+	}
+	return buf.Bytes()
+}
+
+// String returns a stringified version of the message, see Message.Bytes
+func (m *Message) String() string {
+	return string(m.Bytes())
+}
+
+// Channel is a simple method to get the channel, aka the first param
+func (m *Message) Channel() string {
+	if len(m.Params) > 0 {
+		if m.Params[0][0] == '#' {
+			return m.Params[0]
+		}
+	}
+	return ""
+}
 
 // ParseMessage parses a message from a raw string into a *Message
 func ParseMessage(raw string) *Message {
@@ -141,55 +190,6 @@ func cleanMessage(m *Message) *Message {
 		}
 	}
 	return m
-}
-
-// ParseEmotes is a short way to automatically parse and save the message's emotes, using tmi.ParseEmotes
-func (m *Message) ParseEmotes() {
-	if m == nil {
-		return
-	}
-	if m.Tags != nil {
-		s, ok := m.Tags["emotes"]
-		if !ok {
-			return
-		}
-		m.Emotes = ParseEmotes(s)
-		sort.Sort(ByPos(m.Emotes))
-	}
-}
-
-// Bytes is used to return a Message to a []byte, in case we want to send a *Message to the server
-// This does not return a parsed Message to its original form, but rather a message
-// in the basic form that the server expects
-func (m *Message) Bytes() []byte {
-	var buf bytes.Buffer
-
-	buf.WriteString(m.Command)
-
-	if len(m.Params) > 0 {
-		buf.WriteByte(space)
-		buf.WriteString(strings.Join(m.Params, string(space)))
-		buf.WriteString(m.Trailing)
-	}
-	if buf.Len() > (maxLength) {
-		buf.Truncate(maxLength)
-	}
-	return buf.Bytes()
-}
-
-// String returns a stringified version of the message, see Message.Bytes
-func (m *Message) String() string {
-	return string(m.Bytes())
-}
-
-// Channel is a simple method to get the channel, aka the first param
-func (m *Message) Channel() string {
-	if len(m.Params) > 0 {
-		if m.Params[0][0] == '#' {
-			return m.Params[0]
-		}
-	}
-	return ""
 }
 
 // ParseEmotes transform the emotes string from the tag and returns a slice
