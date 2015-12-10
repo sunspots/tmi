@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/SunspotsEU/tmi"
@@ -134,6 +135,9 @@ func (bttv *BTTVEmotes) MiddleWare(m *tmi.Message, err error) (*tmi.Message, err
 	if err != nil {
 		return m, err
 	}
+	bttvEmotes := bttv.MatchEmotes(m)
+	m.Emotes = append(m.Emotes, bttvEmotes...)
+	sort.Sort(tmi.ByPos(m.Emotes))
 	return m, nil
 }
 
