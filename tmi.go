@@ -243,9 +243,6 @@ func (tmi *Connection) Connect(nick, token string) (err error) {
 	tmi.Send("PASS oauth:" + tmi.Token)
 	tmi.Send("NICK " + tmi.Nick)
 	tmi.Send("CAP REQ :twitch.tv/tags twitch.tv/commands")
-	if len(tmi.TC) > 1 {
-		tmi.Send(tmi.TC)
-	}
 
 	return nil
 }
