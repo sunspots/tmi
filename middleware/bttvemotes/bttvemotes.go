@@ -35,7 +35,7 @@ type BTTVEmotes struct {
 	Sets map[string]*BTTVEmoteSet
 }
 
-func (bttv *BTTVEmotes) Download(url string, setName string) {
+func (bttv *BTTVEmotes) download(url string, setName string) {
 	// download all emotes
 
 	res, err := http.Get(url)
@@ -62,16 +62,20 @@ func (bttv *BTTVEmotes) Download(url string, setName string) {
 	log.Println("Fetched", len(response.Emotes), "bttv emotes for", setName)
 	bttv.Sets[setName] = &response
 }
+
+// DownloadChannelEmotes downloads a specific channel's emotes
 func (bttv *BTTVEmotes) DownloadChannelEmotes(channel string) {
-	bttv.Download("https://api.betterttv.net/2/channels/"+channel, channel)
+	bttv.download("https://api.betterttv.net/2/channels/"+channel, channel)
 	bttv.MakeEmoteRegexps(bttv.Sets[channel])
 }
 
+// DownloadEmotes downloads the standard bttv emotes
 func (bttv *BTTVEmotes) DownloadEmotes() {
-	bttv.Download("https://api.betterttv.net/2/emotes", "bttv")
+	bttv.download("https://api.betterttv.net/2/emotes", "bttv")
 	bttv.MakeEmoteRegexps(bttv.Sets["bttv"])
 }
 
+// MakeEmoteRegexps compiles all the emotes' regexps so we have it done and ready for matching!
 func (bttv *BTTVEmotes) MakeEmoteRegexps(emoteRes *BTTVEmoteSet) {
 	if emoteRes == nil {
 		return
@@ -90,6 +94,10 @@ func (bttv *BTTVEmotes) MakeEmoteRegexps(emoteRes *BTTVEmoteSet) {
 	}
 }
 
+// MatchEmotes is pretty weird because I havent' been able to use proper regexes.
+// So the regex matches emotes starting with zero-length `^` and/or ending with zero-length `$`
+// But if it matches `\s`, it will include it in the fucking match, so I'm detecting it and stripping it out.
+// Look at MakeEmoteRegexps and see if you have a better regexp!!!
 func (bttv *BTTVEmotes) MatchEmotes(m *tmi.Message) []*tmi.Emote {
 	foundEmotes := []*tmi.Emote{}
 
@@ -110,6 +118,7 @@ func (bttv *BTTVEmotes) MatchEmotes(m *tmi.Message) []*tmi.Emote {
 				continue
 			}
 			for _, pos := range found {
+				// This whole part to strip out spaces is really shitty.
 				if space.Match([]byte(m.Trailing[pos[0] : pos[0]+1])) {
 					pos[0]++
 				}
@@ -130,7 +139,7 @@ func (bttv *BTTVEmotes) MatchEmotes(m *tmi.Message) []*tmi.Emote {
 	return foundEmotes
 }
 
-// TBD
+// MiddleWare works as a middleware; matching, appending and sorting BTTV emotes into m.Emotes
 func (bttv *BTTVEmotes) MiddleWare(m *tmi.Message, err error) (*tmi.Message, error) {
 	if err != nil {
 		return m, err
@@ -141,6 +150,8 @@ func (bttv *BTTVEmotes) MiddleWare(m *tmi.Message, err error) (*tmi.Message, err
 	return m, nil
 }
 
+// New returns a new BTTVEmotes object that is needed to download
+// and manage all the different BTTV emotes
 func New() *BTTVEmotes {
 	return &BTTVEmotes{Sets: map[string]*BTTVEmoteSet{}}
 }
