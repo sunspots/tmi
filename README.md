@@ -12,12 +12,13 @@ and it doesn't implement any events. Instead it is built on a blocking (buffered
 
 The current version is heavily influenced by [irc-event](https://github.com/thoj/go-ircevent) and it's forks. I will be refactoring and rewriting a lot of it since I'm not entirely convinced with the approach, but it's what I needed to make it work for now.
 
+If you have issues, ideas, feature requests etc. Feel free to open an issue, or send a pull request!
 
 ## Installation
 
 With Google's [Go](http://www.golang.org) installed on your machine:
 
-    $ go get github.com/sunspotseu/tmi
+    $ go get github.com/SunspotsEU/tmi
 
 ## Usage
 See examples
@@ -26,7 +27,7 @@ See examples
 
 View godocs
 
-    $ godoc github.com/sunspotseu/tmi
+    $ godoc github.com/SunspotsEU/tmi
 
 ## TO DO
 - Better handling of errors on the different loops,
