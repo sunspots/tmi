@@ -59,17 +59,22 @@ func ParseMessage(raw string) *Message {
 		return nil
 	}
 	m := new(Message)
-
-	var i, c = 0, 0 // working index, cursor
+	
+	// Next delimiter, before the next part we want to parse (i)
+	// nextDelimiter is always relative to the current position, so actual index
+	// is position + nextDelimiter
+	nextDelimiter := 0 
+	// working position/cursor (c)
+	position := 0 
 
 	//Extract tags
 	if raw[0] == prefixTags {
 		// If tags are indicated, but no space after (no command), return nil
-		if i = strings.IndexByte(raw, space); i < 0 {
+		if nextDelimiter = strings.IndexByte(raw, space); nextDelimiter < 0 {
 			return nil
 		}
-		m.Tags = ParseTags(raw[1:i])
-		c += i + 1
+		m.Tags = ParseTags(raw[1:nextDelimiter])
+		position += nextDelimiter + 1
 	}
 
 	// Extract and sipmlify prefix as "From";
@@ -77,44 +82,45 @@ func ParseMessage(raw string) *Message {
 	// We only really need a single "from", instead of breaking it up to save arbitrary data
 	// Only possible use case would be if we explicitly need to know if a message
 	// was sent from a user or if it was sent from server
-	if raw[c] == prefix {
+	if raw[position] == prefix {
 		// If prefix is indicated but no space after (command is missing), return nil
-		if i = strings.IndexByte(raw[c:], space); c+i < 0 {
+		if nextDelimiter = strings.IndexByte(raw[position:], space); position+nextDelimiter < 0 {
 			return nil
 		}
 
-		m.From = raw[c+1 : c+i]
+		m.From = raw[position+1 : position+nextDelimiter]
 
 		if a := strings.IndexByte(m.From, prefixUser); a != -1 {
 			m.From = m.From[0:a]
 		}
-		c += i + 1
+		// Move position forward
+		position += nextDelimiter + 1
 	}
 
 	// Find end of command
-	i = strings.IndexByte(raw[c:], space)
-	if i < 0 {
+	nextDelimiter = strings.IndexByte(raw[position:], space)
+	if nextDelimiter < 0 {
 		// Nothing after command, return
-		m.Command = raw[c:]
+		m.Command = raw[position:]
 		return m
 	}
-	m.Command = raw[c : c+i]
-	c += i + 1
+	m.Command = raw[position : position+nextDelimiter]
+	position += nextDelimiter + 1
 
 	// Find prefix for trailing
-	i = strings.IndexByte(raw[c:], prefix)
+	nextDelimiter = strings.IndexByte(raw[position:], prefix)
 
 	var params []string
-	if i < 0 {
+	if nextDelimiter < 0 {
 		//no trailing
-		params = strings.Split(raw[c:], string(space))
+		params = strings.Split(raw[position:], string(space))
 	} else {
 		// Has trailing
-		if i > 0 {
+		if nextDelimiter > 0 {
 			// Has params
-			params = strings.Split(raw[c:c+i-1], string(space))
+			params = strings.Split(raw[position:position+nextDelimiter-1], string(space))
 		}
-		m.Trailing = raw[c+i+1:]
+		m.Trailing = raw[position+nextDelimiter+1:]
 	}
 	if len(params) > 0 {
 		m.Params = params
