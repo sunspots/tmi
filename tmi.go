@@ -18,10 +18,6 @@ var (
 const (
 	// Maximum message size allowed from peer.
 	maxMessageSize = 512
-	// LF character, line feed is the read message delimiter
-	LF byte = '\n'
-	// CR character, messages are terminated with CR+LF
-	CR byte = '\r'
 )
 
 // Send sends messages to the TMI server
@@ -101,7 +97,7 @@ func (tmi *Connection) readLoop() {
 			if tmi.socket != nil {
 				tmi.socket.SetReadDeadline(time.Now().Add(tmi.Timeout*2 + tmi.KeepAlive))
 			}
-			msg, err := br.ReadString(LF)
+			msg, err := br.ReadString('\n')
 			if err != nil {
 				tmi.Error <- err
 				return
