@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	actionPrefixLen = 8             // Length of the action start
-	actionPrefix    = "\x01ACTION " // Indicates the start of an ACTION(/me) message
-	actionSuffix    = '\x01'        // Indicates the end of the same ^
+	actionPrefix    = "\x01ACTION "     // Indicates the start of an ACTION(/me) message
+	actionPrefixLen = len(actionPrefix) // Length of the action start, never changes so we save a const
+	actionSuffix    = '\x01'            // Indicates the end of the same ^
 
 	prefix     byte = 0x3A // ":" Prefix/trailing/emoticon-separator
 	prefixUser byte = 0x21 // "!" Username
