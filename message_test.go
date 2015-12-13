@@ -196,7 +196,7 @@ func TestParseEmotes(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(emotes, comp) {
-		t.Error("Boo!")
+		t.Error("Failed parsing emotes!")
 	}
 }
 
@@ -214,12 +214,12 @@ func BenchmarkTags(b *testing.B) {
 
 func BenchmarkEmotes(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		parseEmotes("25:0-4/1902:12-16/30259:23-29,31-37")
+		ParseEmotes("25:0-4/1902:12-16/30259:23-29,31-37")
 	}
 }
 
 func BenchmarkEmotes22Kappas(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		parseEmotes("25:0-4,6-10,12-16,18-22,24-28,30-34,36-40,42-46,48-52,54-58,60-64,66-70,72-76,78-82,84-88,90-94,96-100,102-106,108-112,114-118,120-124,126-130")
+		ParseEmotes("25:0-4,6-10,12-16,18-22,24-28,30-34,36-40,42-46,48-52,54-58,60-64,66-70,72-76,78-82,84-88,90-94,96-100,102-106,108-112,114-118,120-124,126-130")
 	}
 }
