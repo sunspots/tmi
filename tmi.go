@@ -250,7 +250,7 @@ func (tmi *Connection) Connect(nick, token string) (err error) {
 // New returns a new connection object, ready to connect
 func New() *Connection {
 	tmi := &Connection{
-		Server:    "irc.twitch.tv",
+		Server:    "irc.chat.twitch.tv",
 		Port:      "6667",
 		Debug:     false,
 		socket:    nil,
