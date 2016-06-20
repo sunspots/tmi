@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/SunspotsEU/tmi"
+	"github.com/sunspots/tmi"
 )
 
 var space = regexp.MustCompile(`\s`)

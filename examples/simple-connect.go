@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/SunspotsEU/tmi"
+	"github.com/sunspots/tmi"
 )
 
 const (

@@ -5,7 +5,7 @@ package channels
 import (
 	"fmt"
 
-	"github.com/SunspotsEU/tmi"
+	"github.com/sunspots/tmi"
 )
 
 // Channel contains options and state for an individual channel
