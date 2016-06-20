@@ -78,7 +78,11 @@ func (m *Message) Bytes() []byte {
 	if len(m.Params) > 0 {
 		buf.WriteByte(space)
 		buf.WriteString(strings.Join(m.Params, string(space)))
-		buf.WriteString(m.Trailing)
+    if len(m.Trailing) > 0 {
+      buf.WriteByte(space)
+      buf.WriteByte(prefix)
+      buf.WriteString(m.Trailing)
+    }
 	}
 	if buf.Len() > (maxLength) {
 		buf.Truncate(maxLength)
