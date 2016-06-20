@@ -28,12 +28,12 @@ type Connection struct {
 
 // Connector interface for implementing alternate Connections
 type Connector interface {
-  Connect(string, string) error
-  Send(string)
-  Sendf(string, ...interface{})
-  Join(string)
-  Stopped() bool
-  Disconnect()
-  ReadMessage() (*Message, error)
-  Reconnect() error
+	Connect(string, string) error
+	Send(string)
+	Sendf(string, ...interface{})
+	Join(string)
+	Stopped() bool
+	Disconnect()
+	ReadMessage() (*Message, error)
+	Reconnect() error
 }

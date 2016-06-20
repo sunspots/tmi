@@ -261,6 +261,7 @@ func New() *Connection {
 	}
 	return tmi
 }
+
 // Connect is a shortcut to creating a new connection, connecting to it and returns the connection
 func Connect(nick, token string) *Connection {
 	new := New()
