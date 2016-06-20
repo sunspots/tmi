@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	User    = "sunspots"
-	OAuth   = "oauth:9m48oiumz0bz3v8ec4g6ph8ylw4roe"
-	Channel = "#sunspots"
+	user    = "sunspots"
+	oAuth   = "oauth:foobar"
+	channel = "#sunspots"
 )
 
 func readLoop(connection *tmi.Connection) {
@@ -36,9 +36,9 @@ func main() {
 	connection := tmi.New() // Initialise the connection object with required login
 	connection.Debug = true // Prints out raw incoming and outgoing messages
 
-	connection.Connect(User, OAuth) // Connect and authenticate
+	connection.Connect(user, oAuth) // Connect and authenticate
 
-	connection.Join(Channel)
+	connection.Join(channel)
 	go readLoop(connection)
 
 	// Now, since it's running things in a goroutine, we don't want main to exit yet,
@@ -48,7 +48,7 @@ func main() {
 
 	for {
 		input, _ := reader.ReadString('\n')
-		connection.Send(fmt.Sprintf("PRIVMSG %s %s", Channel, input))
+		connection.Send(fmt.Sprintf("PRIVMSG %s %s", channel, input))
 	}
 
 }
