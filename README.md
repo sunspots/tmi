@@ -18,7 +18,7 @@ If you have issues, ideas, feature requests etc. Feel free to open an issue, or 
 
 With Google's [Go](http://www.golang.org) installed on your machine:
 
-    $ go get github.com/SunspotsEU/tmi
+    $ go get github.com/sunspots/tmi
 
 ## Usage
 See examples
