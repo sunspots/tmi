@@ -27,7 +27,7 @@ See examples
 
 View godocs
 
-    $ godoc github.com/SunspotsEU/tmi
+    $ godoc github.com/sunspots/tmi
 
 ## TO DO
 - Better handling of errors on the different loops,
