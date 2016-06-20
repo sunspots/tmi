@@ -25,3 +25,15 @@ type Connection struct {
 	KeepAlive   time.Duration
 	lastMessage time.Time
 }
+
+// Connector interface for implementing alternate Connections
+type Connector interface {
+  Connect(string, string) error
+  Send(string)
+  Sendf(string, ...interface{})
+  Join(string)
+  Stopped() bool
+  Disconnect()
+  ReadMessage() (*Message, error)
+  Reconnect() error
+}
