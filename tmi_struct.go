@@ -28,7 +28,7 @@ type Connection struct {
 
 // Connector interface for implementing alternate Connections
 type Connector interface {
-	Connect(string, string) error
+	Connect() error
 	Send(string)
 	Sendf(string, ...interface{})
 	Join(string)

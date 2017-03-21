@@ -64,7 +64,7 @@ func (tmi *Connection) Disconnect() {
 // Reconnect to a connected server
 func (tmi *Connection) Reconnect() error {
 	tmi.Disconnect()
-	return tmi.Connect(tmi.Nick, tmi.Token)
+	return tmi.Connect()
 }
 
 // Stopped tells us wether the client is stopped or not
@@ -207,17 +207,9 @@ func (tmi *Connection) Join(channel string) {
 }
 
 // Connect connects to the server, starts reading and authenticates
-func (tmi *Connection) Connect(nick, token string) (err error) {
-	if len(nick) == 0 {
-		return errors.New("empty 'nick'")
-	}
-	if len(token) == 0 {
-		return errors.New("empty 'token'")
-	}
-	tmi.Nick = nick
-	tmi.Token = token
+func (tmi *Connection) Connect() (err error) {
 
-	if tmi.Token[0:6] == "oauth:" {
+	if len(tmi.Token) > 0 && tmi.Token[0:6] == "oauth:" {
 		tmi.Token = tmi.Token[6:]
 	}
 
@@ -240,7 +232,11 @@ func (tmi *Connection) Connect(nick, token string) (err error) {
 	go tmi.controlLoop()
 
 	//Authenticate
-	tmi.Send("PASS oauth:" + tmi.Token)
+
+	if len(tmi.Token) != 0 {
+		tmi.Send("PASS oauth:" + tmi.Token)
+	}
+
 	tmi.Send("NICK " + tmi.Nick)
 	tmi.Send("CAP REQ :twitch.tv/tags twitch.tv/commands")
 
@@ -248,7 +244,7 @@ func (tmi *Connection) Connect(nick, token string) (err error) {
 }
 
 // New returns a new connection object, ready to connect
-func New() *Connection {
+func New(nick, token string) *Connection {
 	tmi := &Connection{
 		Server:    "irc.chat.twitch.tv",
 		Port:      "6667",
@@ -258,13 +254,21 @@ func New() *Connection {
 		Timeout:   15 * time.Second,
 		KeepAlive: 30 * time.Second,
 		Error:     make(chan error, 3),
+		Nick:      nick,
+		Token:     token,
 	}
 	return tmi
 }
 
 // Connect is a shortcut to creating a new connection, connecting to it and returns the connection
 func Connect(nick, token string) *Connection {
-	new := New()
-	new.Connect(nick, token)
+	new := New(nick, token)
+	new.Connect()
+	return new
+}
+
+func Anonymous() *Connection {
+	new := New("justinfan999", "")
+	new.Connect()
 	return new
 }

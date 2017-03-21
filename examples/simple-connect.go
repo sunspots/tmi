@@ -33,10 +33,10 @@ func readLoop(connection *tmi.Connection) {
 }
 
 func main() {
-	connection := tmi.New() // Initialise the connection object with required login
-	connection.Debug = true // Prints out raw incoming and outgoing messages
+	connection := tmi.New(user, oAuth) // Initialise the connection object with required login
+	connection.Debug = true            // Prints out raw incoming and outgoing messages
 
-	connection.Connect(user, oAuth) // Connect and authenticate
+	connection.Connect() // Connect and authenticate
 
 	connection.Join(channel)
 	go readLoop(connection)
