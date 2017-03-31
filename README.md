@@ -3,9 +3,9 @@ tmi
 
 A simple library to interface with Twitch's IRC, TMI  
 The library is intended to be used as a base for bots, clients, web-relays, overlays, statistics etc.
-On top of basic IRC functionality used by TMI, the parsing handles action(/me) messages, parsing of IRCv3 tags, connection timeout handling, automatic ping/pong etc.
+On top of basic IRC functionality used by TMI, the parsing handles action(/me) messages, parsing of IRCv3 tags, connection timeout, automatic ping/pong etc.
 
-THIS IS AN EARLY DRAFT, MANY THINGS ARE SUBJECT TO CHANGE!
+THIS IS BARELY PRODUCTION TESTED! USE WITH CARE!
 
 The library doesn't explicitly handle commands (it's all passed as strings),
 and it doesn't implement any events. Instead it is built on a blocking (buffered) function call, which returns an event or an error. This way you can add on any event system you really want (I have previously used [emission](https://github.com/chuckpreslar/emission) since it's close to the patterns I'm used to), or just chuck it into a loop.
@@ -29,7 +29,7 @@ View godocs
 
     $ godoc github.com/sunspots/tmi
 
-## TO DO
+## Future wants
 - Better handling of errors on the different loops,
 cleaner approach to the whole looping insides.
 - Lots of other stuff.
@@ -39,7 +39,7 @@ cleaner approach to the whole looping insides.
 
 > The MIT License (MIT)
 
-> Copyright (c) 2015 Sunspots
+> Copyright (c) 2017 Sunspots
 
 > Permission is hereby granted, free of charge, to any person obtaining a copy
 > of this software and associated documentation files (the "Software"), to deal
