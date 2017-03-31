@@ -49,6 +49,8 @@ func (tmi *Connection) readLoop() {
 	}
 }
 
+// The writeloop synchronously sends messages
+// that it picks up from the send channel
 func (tmi *Connection) writeLoop() {
 	defer func() {
 		log.Println("Writer closed")
@@ -86,6 +88,10 @@ func (tmi *Connection) writeLoop() {
 	}
 }
 
+// The pingloop sends automatic, slightly higher frequency, pings
+// to allow a shorter read timeout and disconnect detection.
+// It skips unnecessary pings in case the last received message
+// is within the KeepAlive timeframe
 func (tmi *Connection) pingLoop() {
 	defer func() {
 		log.Println("Pinger stopped")
@@ -112,6 +118,9 @@ func (tmi *Connection) pingLoop() {
 	}
 }
 
+// The control loop manages disconnection if one of the other loops
+// sends an error on the tmi.Error channel
+// That way, the loops can just send an error and quit without caring about other routines
 func (tmi *Connection) controlLoop() {
 	for !tmi.Stopped() {
 		err := <-tmi.Error
