@@ -3,7 +3,7 @@ tmi
 
 A simple library to interface with Twitch's IRC, TMI  
 The library is intended to be used as a base for bots, clients, web-relays, overlays, statistics etc.
-On top of basic IRC functionality used by TMI, the parsing handles action(/me) messages, parsing of IRCv3 tags, connection timeout, automatic ping/pong etc.
+It's designed for a mostly hands-free experience, so on top of basic IRC functionality, the parsing handles action(/me) messages, IRCv3 tags, connection timeout, automatic ping/pong etc.
 
 THIS IS BARELY PRODUCTION TESTED! USE WITH CARE!
 
