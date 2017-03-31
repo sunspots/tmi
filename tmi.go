@@ -141,14 +141,14 @@ func New(nick, token string) *Connection {
 	return tmi
 }
 
-// Connect is a shortcut to creating a new connection, connecting to it and returns the connection
+// Connect is a shortcut to calling New and connecting before returning
 func Connect(nick, token string) *Connection {
 	new := New(nick, token)
 	new.Connect()
 	return new
 }
 
-// Anonymous is a shortcut to create a new connection without credentials/auth, and connecting as with Connect
+// Anonymous is a shortcut to calling New and connecting, without personal credentials, before returning
 func Anonymous() *Connection {
 	new := New("justinfan999", "")
 	new.Connect()
