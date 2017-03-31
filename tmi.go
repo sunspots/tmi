@@ -86,6 +86,9 @@ func (tmi *Connection) Reconnect() error {
 
 // Connect connects to the server, starts routines and authenticates
 func (tmi *Connection) Connect() (err error) {
+	if !tmi.stopped {
+		return errors.New("Can't attempt to Connect with a Connection that isn't stopped!")
+	}
 
 	if len(tmi.Token) > 0 && tmi.Token[0:6] == "oauth:" {
 		tmi.Token = tmi.Token[6:]
