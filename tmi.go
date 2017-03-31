@@ -52,7 +52,8 @@ func (tmi *Connection) setStopped(value bool) {
 	tmi.Unlock()
 }
 
-// ReadMessage reads an incoming message from the server, blocking until a message is recieved
+// ReadMessage reads an incoming message from the server,
+// blocking until a message is recieved or an error occurs
 func (tmi *Connection) ReadMessage() (*Message, error) {
 	evt, ok := <-tmi.MessageChan
 	var err error
