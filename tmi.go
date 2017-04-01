@@ -59,8 +59,6 @@ func (tmi *Connection) ReadMessage() (*Message, error) {
 	var err error
 	if !ok {
 		err = errors.New("read message channel closed")
-	} else {
-		err = nil
 	}
 	return evt, err
 }
