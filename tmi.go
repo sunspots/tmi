@@ -17,6 +17,10 @@ var (
 const (
 	// Maximum message size allowed from peer.
 	maxMessageSize = 512
+	// Default timeout
+	timeout = 15 * time.Second
+	// Default keepalive
+	keepAlive = 30 * time.Millisecond
 )
 
 // Send sends messages to the TMI server
@@ -131,8 +135,8 @@ func New(username, token string) *Connection {
 		Debug:     false,
 		socket:    nil,
 		stopped:   true,
-		Timeout:   15 * time.Second,
-		KeepAlive: 30 * time.Second,
+		Timeout:   timeout,
+		KeepAlive: keepAlive,
 		Error:     make(chan error, 3),
 		Username:  username,
 		Token:     token,
