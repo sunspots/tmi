@@ -117,14 +117,14 @@ func (tmi *Connection) Connect() (err error) {
 		tmi.Send("PASS oauth:" + tmi.Token)
 	}
 
-	tmi.Send("NICK " + tmi.Nick)
+	tmi.Send("NICK " + tmi.Username)
 	tmi.Send("CAP REQ :twitch.tv/tags twitch.tv/commands")
 
 	return nil
 }
 
 // New returns a new connection object, ready to connect
-func New(nick, token string) *Connection {
+func New(username, token string) *Connection {
 	tmi := &Connection{
 		Server:    "irc.chat.twitch.tv",
 		Port:      "6667",
@@ -134,15 +134,15 @@ func New(nick, token string) *Connection {
 		Timeout:   15 * time.Second,
 		KeepAlive: 30 * time.Second,
 		Error:     make(chan error, 3),
-		Nick:      nick,
+		Username:  username,
 		Token:     token,
 	}
 	return tmi
 }
 
 // Connect is a shortcut to calling New and connecting before returning
-func Connect(nick, token string) *Connection {
-	new := New(nick, token)
+func Connect(username, token string) *Connection {
+	new := New(username, token)
 	new.Connect()
 	return new
 }

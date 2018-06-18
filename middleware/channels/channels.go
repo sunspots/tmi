@@ -26,7 +26,7 @@ func (ch *Channel) chanHandler(m *tmi.Message) {
 	//USERSTATE data is saved in the channel for later.
 	switch m.Command {
 	case "USERSTATE":
-		if ch.group.Conn.Nick == ch.name[1:] {
+		if ch.group.Conn.Username == ch.name[1:] {
 			m.Tags["user_type"] = "broadcaster"
 		}
 		ch.UserState = m.Tags

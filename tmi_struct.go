@@ -12,7 +12,7 @@ type Connection struct {
 	sync.Mutex
 	Server      string // Server to connect to
 	Port        string // Port to connect to
-	Nick        string // Nick to connect with
+	Username    string // Twitch username to connect with
 	Token       string // OAuth token, without "oauth:" prefix
 	stopped     bool
 	end         chan bool
