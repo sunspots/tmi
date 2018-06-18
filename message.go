@@ -49,7 +49,7 @@ type Message struct {
 	Trailing string            `json:"trailing"`
 	Tags     map[string]string `json:"tags"`
 	Emotes   []*Emote          `json:"emotes"`
-	Action   bool              `json:"action, omitempty"`
+	Action   bool              `json:"action,omitempty"`
 }
 
 // ParseEmotes is a short way to automatically parse and save the message's emotes, using tmi.ParseEmotes
@@ -78,11 +78,11 @@ func (m *Message) Bytes() []byte {
 	if len(m.Params) > 0 {
 		buf.WriteByte(space)
 		buf.WriteString(strings.Join(m.Params, string(space)))
-    if len(m.Trailing) > 0 {
-      buf.WriteByte(space)
-      buf.WriteByte(prefix)
-      buf.WriteString(m.Trailing)
-    }
+		if len(m.Trailing) > 0 {
+			buf.WriteByte(space)
+			buf.WriteByte(prefix)
+			buf.WriteString(m.Trailing)
+		}
 	}
 	if buf.Len() > (maxLength) {
 		buf.Truncate(maxLength)
