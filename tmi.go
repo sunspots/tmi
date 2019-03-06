@@ -1,159 +1,71 @@
-// Package tmi is a simple library for connecting to Twitch's pseudo-IRC servers, aka Twitch Message Interface
+// Package tmi implements a TMI client (IRC with Twitch flavour) to connect to the Twitch chat.
+//
+// Overview
+//
+// The Client type represents the client connection to the Twitch chat.
+// Client objects can be created manually, but the most common use cases are covered by calling Anonymous, Default or New.
+// A client calls client.Connect() in order to establish the connection.
+//
+// 	client := tmi.Default("username", "12345")
+// 	err := client.Connect()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	client.Join("twitchdev")
+// 	.. use client to send and receive messages
+//
+// Unless you use Anonymous or Default, you need to supply a socket implementation,
+// the default socket implementations are TCP and WebSocket, both come with optional (but recommended) TLS.
+//
+// 	socket := tmi.NewWebSocket(true)
+// 	client := tmi.New("username", "12345", socket)
+//
+// For most use cases, call the client's Say and ReadMessage methods to communicate with chat.
+// For sending, there are also the Send(string), Sendf(like fmt.Printf) SendBytes(Bytearray) and SendMessage(*Message) methods.
+// This example shows how to automatically respond to all messages:
+//
+//	for {
+//		m, err := client.ReadMessage()
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//		client.Say(m.Channel, "Hello " + m.From)
+//	}
+//
+// Detecting dropped connections
+//
+// When working with real-time chat, missing out on messages sucks.
+// In case a connection drops, we want to detect it early and attempt to reconnect.
+// The main method for detecting a dropped connection is to attempt communication.
+// Twitch checks that your connection is alive by sending a PING message every ~5 minutes, which `tmi` responds to automatically.
+// The application must read on the connection in order to process PINGs (ReadMessage will block until it's handled, and attempt to return the next message)
+//
+// If you want to avoid missing messages, it could be worth sending your own PING messages to Twitch.
+// Usually, sending the message regularly is good enough (no need to check for PONG).or other control messages (RECONNECT, etc.)
+// A snippet like this might be enough.
+//
+// 	stop := new(chan struct{})
+// 	ticker := time.NewTicker(time.Minute)
+// 	go func() {
+// 		for {
+// 			select {
+// 			case <-ticker.C:
+// 				err := c.Sendf("PING %d", time.Now().UnixNano())
+// 				if err != nil {
+// 					return
+// 				}
+// 			case <-stop:
+// 				ticker.Stop()
+// 				return
+// 			}
+// 		}
+// 	}()
+// close(stop)
 package tmi
-
-import (
-	"errors"
-	"fmt"
-	"log"
-	"net"
-	"os"
-	"time"
-)
-
-var (
-	dbg = log.New(os.Stdout, "TMI: ", log.LstdFlags)
-)
 
 const (
 	// Maximum message size allowed from peer.
 	maxMessageSize = 512
-	// Default timeout
-	timeout = 15 * time.Second
-	// Default keepalive
-	keepAlive = 30 * time.Millisecond
+	// AnonymousUser is just a username you can use to connect anonymously
+	AnonymousUser = "justinfan999"
 )
-
-// Send sends messages to the TMI server
-func (tmi *Connection) Send(s string) {
-	if !tmi.Stopped() {
-		tmi.send <- s
-	} else {
-		dbg.Printf("unable to send %s on closed connection \n", s)
-	}
-}
-
-// Sendf sends a message, with format and params, wrapper around fmt.Sprintf
-func (tmi *Connection) Sendf(format string, a ...interface{}) {
-	tmi.Send(fmt.Sprintf(format, a...))
-}
-
-// Join simply sends a join message
-func (tmi *Connection) Join(channel string) {
-	tmi.Send("JOIN " + channel)
-}
-
-// Stopped tells us wether the client is stopped or not
-func (tmi *Connection) Stopped() bool {
-	tmi.Lock()
-	defer tmi.Unlock()
-	return tmi.stopped
-}
-
-// Update the stopped status when starting or stopping the client
-func (tmi *Connection) setStopped(value bool) {
-	tmi.Lock()
-	tmi.stopped = value
-	tmi.Unlock()
-}
-
-// ReadMessage reads an incoming message from the server,
-// blocking until a message is recieved or an error occurs
-func (tmi *Connection) ReadMessage() (*Message, error) {
-	evt, ok := <-tmi.MessageChan
-	var err error
-	if !ok {
-		err = errors.New("read message channel closed")
-	}
-	return evt, err
-}
-
-// Disconnect from the server
-func (tmi *Connection) Disconnect() {
-	if !tmi.Stopped() {
-		tmi.setStopped(true)
-		close(tmi.end)
-		tmi.Wait()
-		close(tmi.send)
-		tmi.socket.Close()
-		tmi.socket = nil
-		close(tmi.MessageChan)
-		dbg.Println("Disconnected!")
-	}
-}
-
-// Reconnect to a connected server
-func (tmi *Connection) Reconnect() error {
-	tmi.Disconnect()
-	return tmi.Connect()
-}
-
-// Connect connects to the server, starts routines and authenticates
-func (tmi *Connection) Connect() (err error) {
-	if !tmi.stopped {
-		return errors.New("Can't attempt to Connect with a Connection that isn't stopped!")
-	}
-
-	if len(tmi.Token) > 0 && tmi.Token[0:6] == "oauth:" {
-		tmi.Token = tmi.Token[6:]
-	}
-
-	tmi.socket, err = net.DialTimeout("tcp", tmi.Server+":"+tmi.Port, tmi.Timeout)
-	if err != nil {
-		return err
-	}
-
-	log.Printf("Connected to TMI server %s (%s)\n", tmi.Server, tmi.socket.RemoteAddr())
-	tmi.Lock()
-	tmi.end = make(chan bool)
-	tmi.send = make(chan string, 10)
-	tmi.MessageChan = make(chan *Message, 50)
-	tmi.stopped = false
-	tmi.Unlock()
-	tmi.Add(4)
-	go tmi.readLoop()
-	go tmi.writeLoop()
-	go tmi.pingLoop()
-	go tmi.controlLoop()
-
-	//Authenticate
-
-	if len(tmi.Token) != 0 {
-		tmi.Send("PASS oauth:" + tmi.Token)
-	}
-
-	tmi.Send("NICK " + tmi.Username)
-	tmi.Send("CAP REQ :twitch.tv/tags twitch.tv/commands")
-
-	return nil
-}
-
-// New returns a new connection object, ready to connect
-func New(username, token string) *Connection {
-	tmi := &Connection{
-		Server:    "irc.chat.twitch.tv",
-		Port:      "6667",
-		Debug:     false,
-		socket:    nil,
-		stopped:   true,
-		Timeout:   timeout,
-		KeepAlive: keepAlive,
-		Error:     make(chan error, 3),
-		Username:  username,
-		Token:     token,
-	}
-	return tmi
-}
-
-// Connect is a shortcut to calling New and connecting before returning
-func Connect(username, token string) *Connection {
-	new := New(username, token)
-	new.Connect()
-	return new
-}
-
-// Anonymous is a shortcut to calling New and connecting, without personal credentials, before returning
-func Anonymous() *Connection {
-	new := New("justinfan999", "")
-	new.Connect()
-	return new
-}
