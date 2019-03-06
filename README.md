@@ -1,6 +1,5 @@
 tmi
 --------
-**New breaking changes see [CHANGES.md](CHANGES.md)**
 
 A simple library to interface with Twitch's IRC, TMI  
 The library is intended to be used as a base for bots, clients, web-relays, overlays, statistics etc.
